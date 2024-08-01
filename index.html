@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="images/crisis.png" type="image/x-icon">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Incident Tracker</h1>
+            <span class="header-icon"><b>书法</b></span>
+            <div class="header-content">
+                <!-- Add your header content here, e.g., logo, navigation -->
+            </div>
+        </header>
+
+        <main>
+            <section class="intro">
+                <h2>Welcome to the Incident Tracker</h2>
+                <p>Welcome to the Incident Tracker. This tool helps you record, track, and manage incidents efficiently. Please follow the instructions below to use the system effectively.</p>
+            </section>
+
+            <section class="instructions card">
+                <h2>How to Use</h2>
+                <ul>
+                    <li>To add a new incident, fill out the form under "New Incident" and click "Add Incident".</li>
+                    <li>You can search for incidents using various filters in the "Search Incidents" section.</li>
+                    <li>Use the pagination buttons to navigate through the incident history.</li>
+                    <li>To export or import incidents, use the options in the "Data Management" section.</li>
+                </ul>
+            </section>
+
+            <section class="card add-incident">
+                <h2>New Incident</h2>
+                <form id="new-incident">
+                    <div class="form-group">
+                        <label for="inc-number">INC Number:</label>
+                        <input type="text" id="inc-number" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="caller-number">Caller Number:</label>
+                        <input type="tel" id="caller-number" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status:</label>
+                        <select id="status" required>
+                            <option value="">Select Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Resolved">Resolved</option>
+                            <option value="Awaiting User Info">Awaiting User Info</option>
+                            <option value="POS Depot">POS Depot</option>
+                            <option value="Escalation">Escalation</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="date">Date:</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="summary">Summary:</label>
+                        <textarea id="summary" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="add-incident-btn">Add Incident</button>
+                    <button type="button" class="btn btn-secondary" id="clear-form-btn">Clear</button>
+                </form>
+            </section>
+
+            <section class="card search-incidents">
+                <h2>Search Incidents</h2>
+                <div class="search-container">
+                    <input type="text" id="search-inc-number" placeholder="INC Number">
+                    <input type="tel" id="search-caller-number" placeholder="Caller Number">
+                    <select id="search-status">
+                        <option value="">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Awaiting User Info">Awaiting User Info</option>
+                        <option value="POS Depot">POS Depot</option>
+                        <option value="Escalation">Escalation</option>
+                    </select>
+                    <input type="date" id="search-date">
+                    <button class="btn btn-primary" id="search-btn">Search</button>
+                    <button class="btn btn-secondary" id="clear-search-btn">Clear</button>
+                </div>
+            </section>
+
+            <section class="card incident-history">
+                <h2>Incident History</h2>
+                <div class="table-responsive">
+                    <table id="incident-table">
+                        <thead>
+                            <tr>
+                                <th>INC Number</th>
+                                <th>Caller Number</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Summary</th>
+                            </tr>
+                        </thead>
+                        <tbody id="incident-list">
+                            <!-- Incident rows will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination">
+                    <button class="btn btn-secondary" id="prev-page">Previous</button>
+                    <span id="page-info"></span>
+                    <button class="btn btn-secondary" id="next-page">Next</button>
+                </div>
+            </section>
+
+            <section class="card data-management">
+                <h2>Data Management</h2>
+                <div class="data-controls">
+                    <div class="form-group">
+                        <label for="agent-name">Agent Name:</label>
+                        <input type="text" id="agent-name" placeholder="Enter your name">
+                    </div>
+                    <button class="btn btn-primary" id="export-btn">Export to CSV</button>
+                    <div class="form-group">
+                        <label for="file-input">Import CSV:</label>
+                        <input type="file" id="file-input" accept=".csv">
+                    </div>
+                    <button class="btn btn-primary" id="import-btn">Import CSV</button>
+                    <button class="btn btn-danger" id="delete-all-btn">Delete All Data</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <p>&copy; 2024 Incident Tracker | Designed by तन्मय</p>
+                <p>Version 1.0.0</p>
+                <p>Date: 1-08-2024</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
