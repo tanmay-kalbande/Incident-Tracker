@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
     const newIncidentForm = document.getElementById('new-incident');
-    const addIncidentBtn = document.getElementById('add-incident-btn');
     const clearFormBtn = document.getElementById('clear-form-btn');
     const searchBtn = document.getElementById('search-btn');
     const clearSearchBtn = document.getElementById('clear-search-btn');
@@ -12,11 +11,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const importBtn = document.getElementById('import-btn');
     const fileInput = document.getElementById('file-input');
     const deleteAllBtn = document.getElementById('delete-all-btn');
+
     let incidents = JSON.parse(localStorage.getItem('incidents')) || [];
     let currentPage = 1;
     const itemsPerPage = 10;
+    let sortColumn = null;
+    let sortOrder = 'asc';
+    const STORAGE_THRESHOLD = 4 * 1024 * 1024; // 4MB
 
-    // Load existing data
+    function clearNewIncidentForm() {
+        newIncidentForm.reset();
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('summary').value = '';
+    }
+
+    clearNewIncidentForm();
     renderIncidents();
 
     newIncidentForm.addEventListener('submit', function (e) {
@@ -30,12 +39,13 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         incidents.push(newIncident);
         localStorage.setItem('incidents', JSON.stringify(incidents));
-        newIncidentForm.reset();
+        checkStorageSize();
+        clearNewIncidentForm();
         renderIncidents();
     });
 
     clearFormBtn.addEventListener('click', function () {
-        newIncidentForm.reset();
+        clearNewIncidentForm();
     });
 
     searchBtn.addEventListener('click', function () {
@@ -48,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('search-caller-number').value = '';
         document.getElementById('search-status').value = '';
         document.getElementById('search-date').value = '';
+        currentPage = 1;
         renderIncidents();
     });
 
@@ -59,7 +70,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     nextPageBtn.addEventListener('click', function () {
-        if (currentPage * itemsPerPage < incidents.length) {
+        const filteredIncidents = getFilteredIncidents();
+        if (currentPage * itemsPerPage < filteredIncidents.length) {
             currentPage++;
             renderIncidents();
         }
@@ -71,20 +83,20 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Please enter your name before exporting.');
             return;
         }
-
+        const filteredIncidents = getFilteredIncidents();
+        const statusFilter = document.getElementById('search-status').value || 'All';
+        const currentDate = new Date().toISOString().split('T')[0];
         let csv = `Agent Name: ${agentName}\n`;
         csv += 'INC Number,Caller Number,Status,Date,Summary\n';
-
-        incidents.forEach(incident => {
+        filteredIncidents.forEach(incident => {
             csv += `${incident.incNumber},${incident.callerNumber},${incident.status},${incident.date},"${incident.summary.replace(/"/g, '""')}"\n`;
         });
-
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         if (link.download !== undefined) {
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', `incidents_${agentName}_${new Date().toISOString().split('T')[0]}.csv`);
+            link.setAttribute('download', `incidents_${statusFilter}_by_${agentName}_${currentDate}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -100,13 +112,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 const text = e.target.result;
                 const rows = text.split('\n');
                 rows.forEach((row, index) => {
-                    if (index === 0 || index === 1) return; // Skip header rows
-                    const [incNumber, callerNumber, status, date, summary] = row.split(',');
+                    if (index === 0 || index === 1 || row.trim() === '') return;
+                    const [incNumber, callerNumber, status, date, ...summaryParts] = row.split(',');
+                    const summary = summaryParts.join(',').replace(/^"|"$/g, '').replace(/""/g, '"');
                     if (incNumber && callerNumber && status && date && summary) {
-                        incidents.push({ incNumber, callerNumber, status, date, summary: summary.replace(/^"|"$/g, '') });
+                        incidents.push({ incNumber, callerNumber, status, date, summary });
                     }
                 });
                 localStorage.setItem('incidents', JSON.stringify(incidents));
+                checkStorageSize();
                 renderIncidents();
             };
             reader.readAsText(file);
@@ -115,16 +129,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
     deleteAllBtn.addEventListener('click', function () {
         if (confirm('Are you sure you want to delete all data?')) {
-            incidents = [];
-            localStorage.removeItem('incidents');
-            renderIncidents();
+            const confirmation = prompt('Type "DELETE" to confirm:');
+            if (confirmation === 'DELETE') {
+                incidents = [];
+                localStorage.removeItem('incidents');
+                currentPage = 1;
+                renderIncidents();
+            }
         }
     });
+
+    function deleteIncident(index) {
+        if (confirm('Are you sure you want to delete this incident?')) {
+            incidents.splice(index, 1);
+            localStorage.setItem('incidents', JSON.stringify(incidents));
+            renderIncidents();
+        }
+    }
 
     document.getElementById('status').addEventListener('change', function () {
         const status = this.value;
         const summaryInput = document.getElementById('summary');
-
         switch (status) {
             case 'Active':
                 summaryInput.value = 'The issue is currently being addressed.';
@@ -132,14 +157,14 @@ document.addEventListener('DOMContentLoaded', function () {
             case 'Resolved':
                 summaryInput.value = 'User confirmed that the issue has been resolved.';
                 break;
-            case 'Awaiting User Info':
+            case 'Waiting User Info':
                 summaryInput.value = 'Waiting for additional information from the user.';
                 break;
-            case 'POS Depot':
-                summaryInput.value = 'POS system sent to depot for further investigation.';
+            case 'Vendor':
+                summaryInput.value = 'Incident assigned to external vendor for resolution.';
                 break;
-            case 'Escalation':
-                summaryInput.value = 'Incident escalated to a higher support tier.';
+            case 'Internal Team':
+                summaryInput.value = 'Incident escalated to internal team for further investigation.';
                 break;
             default:
                 summaryInput.value = '';
@@ -147,46 +172,116 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    function renderIncidents() {
-        const filteredIncidents = incidents.filter(incident => {
+    function getFilteredIncidents() {
+        return incidents.filter(incident => {
             const searchIncNumber = document.getElementById('search-inc-number').value.toLowerCase();
             const searchCallerNumber = document.getElementById('search-caller-number').value.toLowerCase();
             const searchStatus = document.getElementById('search-status').value;
             const searchDate = document.getElementById('search-date').value;
-
             return (!searchIncNumber || incident.incNumber.toLowerCase().includes(searchIncNumber)) &&
                 (!searchCallerNumber || incident.callerNumber.toLowerCase().includes(searchCallerNumber)) &&
                 (!searchStatus || incident.status === searchStatus) &&
                 (!searchDate || incident.date === searchDate);
         });
+    }
 
+    function checkStorageSize() {
+        const data = localStorage.getItem('incidents');
+        if (data && data.length > STORAGE_THRESHOLD) {
+            alert('Storage is nearing capacity. Consider exporting and clearing some data.');
+        }
+    }
+
+    function getStatusClass(status) {
+        switch (status) {
+            case 'Active':
+                return 'status-active';
+            case 'Resolved':
+                return 'status-resolved';
+            case 'Waiting User Info':
+                return 'status-waiting';
+            case 'Vendor':
+                return 'status-vendor';
+            case 'Internal Team':
+                return 'status-internal-team';
+            default:
+                return '';
+        }
+    }
+
+    function renderIncidents() {
+        let filteredIncidents = getFilteredIncidents();
+        if (sortColumn) {
+            filteredIncidents.sort((a, b) => {
+                let valA = a[sortColumn];
+                let valB = b[sortColumn];
+                if (sortColumn === 'date') {
+                    valA = new Date(valA);
+                    valB = new Date(valB);
+                    return sortOrder === 'asc' ? valA - valB : valB - valA;
+                } else {
+                    return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                }
+            });
+        }
         const start = (currentPage - 1) * itemsPerPage;
         const end = start + itemsPerPage;
         const paginatedIncidents = filteredIncidents.slice(start, end);
+        const totalPages = Math.ceil(filteredIncidents.length / itemsPerPage) || 1;
 
-        incidentList.innerHTML = paginatedIncidents.map(incident => `
-            <tr>
-                <td>${incident.incNumber}</td>
-                <td>${incident.callerNumber}</td>
-                <td>${incident.status}</td>
-                <td>${incident.date}</td>
-                <td>${incident.summary}</td>
-            </tr>
-        `).join('');
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
 
-        pageInfo.textContent = `Page ${currentPage} of ${Math.ceil(filteredIncidents.length / itemsPerPage)}`;
+        if (filteredIncidents.length === 0) {
+            incidentList.innerHTML = '<tr><td colspan="6" class="no-results">No incidents found. Add a new incident to get started.</td></tr>';
+            document.getElementById('record-count').textContent = 0;
+            document.getElementById('total-records').textContent = 0;
+        } else {
+            incidentList.innerHTML = paginatedIncidents.map((incident, index) => `
+                <tr>
+                    <td>${incident.incNumber}</td>
+                    <td>${incident.callerNumber}</td>
+                    <td><span class="status-badge ${getStatusClass(incident.status)}">${incident.status}</span></td>
+                    <td>${incident.date}</td>
+                    <td>${incident.summary}</td>
+                    <td><button class="btn-danger btn-sm delete-incident-btn" data-index="${start + index}">
+                        <i class="fas fa-trash"></i> Delete
+                    </button></td>
+                </tr>
+            `).join('');
+            document.getElementById('record-count').textContent = paginatedIncidents.length;
+            document.getElementById('total-records').textContent = filteredIncidents.length;
+        }
+
+        pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+        prevPageBtn.disabled = currentPage === 1;
+        nextPageBtn.disabled = currentPage === totalPages;
+
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.delete-incident-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const index = parseInt(this.getAttribute('data-index'));
+                deleteIncident(index);
+            });
+        });
     }
-});
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Other initialization code...
-
-    // Set default date to today
-    const dateInput = document.getElementById('date');
-    if (dateInput) {
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.value = today;
-    }
-
-    // Other event listeners and functions...
+    document.querySelectorAll('#incident-table th').forEach(th => {
+        th.addEventListener('click', () => {
+            const column = th.dataset.column;
+            if (column) {
+                if (sortColumn === column) {
+                    sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+                    th.querySelector('i').className = `fas fa-sort-${sortOrder === 'asc' ? 'up' : 'down'}`;
+                } else {
+                    document.querySelectorAll('#incident-table th i').forEach(i => i.className = 'fas fa-sort');
+                    sortColumn = column;
+                    sortOrder = 'asc';
+                    th.querySelector('i').className = 'fas fa-sort-up';
+                }
+                renderIncidents();
+            }
+        });
+    });
 });
