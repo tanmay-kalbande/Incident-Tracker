@@ -4,142 +4,161 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Incident Tracker</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="images/crisis.png" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="scripts.js" defer></script>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Incident Tracker</h1>
-            <span class="header-icon"><b>书法</b></span>
             <div class="header-content">
-                <!-- Add your header content here, e.g., logo, navigation -->
+                <div class="logo"><i class="fas fa-exclamation-triangle"></i></div>
+                <h1>Incident Tracker</h1>
             </div>
         </header>
-
         <main>
-            <section class="intro">
-                <h2>Welcome to the Incident Tracker</h2>
-                <p>Welcome to the Incident Tracker. This tool helps you record, track, and manage incidents efficiently. Please follow the instructions below to use the system effectively.</p>
-            </section>
-
-            <section class="instructions card">
-                <h2>How to Use</h2>
-                <ul>
-                    <li>To add a new incident, fill out the form under "New Incident" and click "Add Incident".</li>
-                    <li>You can search for incidents using various filters in the "Search Incidents" section.</li>
-                    <li>Use the pagination buttons to navigate through the incident history.</li>
-                    <li>To export or import incidents, use the options in the "Data Management" section.</li>
-                </ul>
-            </section>
-
-            <section class="card add-incident">
-                <h2>New Incident</h2>
-                <form id="new-incident">
-                    <div class="form-group">
-                        <label for="inc-number">INC Number:</label>
-                        <input type="text" id="inc-number" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="caller-number">Caller Number:</label>
-                        <input type="tel" id="caller-number" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="status">Status:</label>
-                        <select id="status" required>
-                            <option value="">Select Status</option>
-                            <option value="Active">Active</option>
-                            <option value="Resolved">Resolved</option>
-                            <option value="Awaiting User Info">Awaiting User Info</option>
-                            <option value="POS Depot">POS Depot</option>
-                            <option value="Escalation">Escalation</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="date">Date:</label>
-                        <input type="date" id="date" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="summary">Summary:</label>
-                        <textarea id="summary" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary" id="add-incident-btn">Add Incident</button>
-                    <button type="button" class="btn btn-secondary" id="clear-form-btn">Clear</button>
-                </form>
-            </section>
-
-            <section class="card search-incidents">
-                <h2>Search Incidents</h2>
-                <div class="search-container">
-                    <input type="text" id="search-inc-number" placeholder="INC Number">
-                    <input type="tel" id="search-caller-number" placeholder="Caller Number">
-                    <select id="search-status">
-                        <option value="">All Statuses</option>
-                        <option value="Active">Active</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="Awaiting User Info">Awaiting User Info</option>
-                        <option value="POS Depot">POS Depot</option>
-                        <option value="Escalation">Escalation</option>
-                    </select>
-                    <input type="date" id="search-date">
-                    <button class="btn btn-primary" id="search-btn">Search</button>
-                    <button class="btn btn-secondary" id="clear-search-btn">Clear</button>
+            <div class="form-container">
+                <!-- New Incident Form -->
+                <div class="card">
+                    <h2><i class="fas fa-plus-circle"></i> New Incident</h2>
+                    <form id="new-incident">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="inc-number"><i class="fas fa-hashtag"></i> INC Number</label>
+                                <input type="text" id="inc-number" required placeholder="INC-001">
+                            </div>
+                            <div class="form-group">
+                                <label for="caller-number"><i class="fas fa-phone"></i> Caller Number</label>
+                                <input type="text" id="caller-number" required placeholder="(123) 456-7890">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="status"><i class="fas fa-tasks"></i> Status</label>
+                                <select id="status" required>
+                                    <option value="">Select Status</option>
+                                    <option value="Active">Active</option>
+                                    <option value="Resolved">Resolved</option>
+                                    <option value="Waiting User Info">Waiting User Info</option>
+                                    <option value="Vendor">Vendor</option>
+                                    <option value="Internal Team">Internal Team</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="date"><i class="fas fa-calendar"></i> Date</label>
+                                <input type="date" id="date" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="summary"><i class="fas fa-file-alt"></i> Summary</label>
+                            <textarea id="summary" required placeholder="Enter incident details..."></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary" id="add-incident-btn">
+                                <i class="fas fa-plus-circle"></i> Add Incident
+                            </button>
+                            <button type="button" class="btn-secondary" id="clear-form-btn">
+                                <i class="fas fa-eraser"></i> Clear
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </section>
-
-            <section class="card incident-history">
-                <h2>Incident History</h2>
+                <!-- Search Incidents -->
+                <div class="card">
+                    <h2><i class="fas fa-search"></i> Search Incidents</h2>
+                    <div class="search-container">
+                        <div class="search-filters">
+                            <input type="text" id="search-inc-number" placeholder="INC Number">
+                            <input type="text" id="search-caller-number" placeholder="Caller Number">
+                            <select id="search-status">
+                                <option value="">All Statuses</option>
+                                <option value="Active">Active</option>
+                                <option value="Resolved">Resolved</option>
+                                <option value="Waiting User Info">Waiting User Info</option>
+                                <option value="Vendor">Vendor</option>
+                                <option value="Internal Team">Internal Team</option>
+                            </select>
+                            <input type="date" id="search-date">
+                        </div>
+                        <div class="search-actions">
+                            <button id="search-btn" class="btn-primary">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                            <button id="clear-search-btn" class="btn-secondary">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Incident History -->
+            <div class="card">
+                <h2><i class="fas fa-history"></i> Incident History</h2>
+                <div class="table-header">
+                    <div></div>
+                    <span class="table-actions">Showing <span id="record-count">0</span> of <span id="total-records">0</span> records</span>
+                </div>
                 <div class="table-responsive">
                     <table id="incident-table">
                         <thead>
                             <tr>
-                                <th>INC Number</th>
-                                <th>Caller Number</th>
-                                <th>Status</th>
-                                <th>Date</th>
+                                <th data-column="incNumber">INC Number <i class="fas fa-sort"></i></th>
+                                <th data-column="callerNumber">Caller Number <i class="fas fa-sort"></i></th>
+                                <th data-column="status">Status <i class="fas fa-sort"></i></th>
+                                <th data-column="date">Date <i class="fas fa-sort"></i></th>
                                 <th>Summary</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="incident-list">
-                            <!-- Incident rows will be populated here -->
+                            <tr>
+                                <td colspan="6" class="no-results">No incidents found. Add a new incident to get started.</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
                 <div class="pagination">
-                    <button class="btn btn-secondary" id="prev-page">Previous</button>
-                    <span id="page-info"></span>
-                    <button class="btn btn-secondary" id="next-page">Next</button>
+                    <button id="prev-page" class="btn-secondary" disabled>
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <span id="page-info">Page 1 of 1</span>
+                    <button id="next-page" class="btn-secondary" disabled>
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
                 </div>
-            </section>
-
-            <section class="card data-management">
-                <h2>Data Management</h2>
-                <div class="data-controls">
+            </div>
+            <!-- Data Management -->
+            <div class="card">
+                <h2><i class="fas fa-database"></i> Data Management</h2>
+                <div class="data-management">
                     <div class="form-group">
-                        <label for="agent-name">Agent Name:</label>
+                        <label for="agent-name"><i class="fas fa-user"></i> Agent Name</label>
                         <input type="text" id="agent-name" placeholder="Enter your name">
                     </div>
-                    <button class="btn btn-primary" id="export-btn">Export to CSV</button>
-                    <div class="form-group">
-                        <label for="file-input">Import CSV:</label>
-                        <input type="file" id="file-input" accept=".csv">
+                    <div class="data-actions">
+                        <button id="export-btn" class="btn-primary">
+                            <i class="fas fa-file-export"></i> Export to CSV
+                        </button>
+                        <div class="import-group">
+                            <label for="file-input" class="file-label">
+                                <i class="fas fa-file-import"></i> Choose File
+                            </label>
+                            <input type="file" id="file-input" accept=".csv">
+                            <button id="import-btn" class="btn-secondary">
+                                <i class="fas fa-file-import"></i> Import CSV
+                            </button>
+                        </div>
+                        <button id="delete-all-btn" class="btn-danger">
+                            <i class="fas fa-trash-alt"></i> Delete All Data
+                        </button>
                     </div>
-                    <button class="btn btn-primary" id="import-btn">Import CSV</button>
-                    <button class="btn btn-danger" id="delete-all-btn">Delete All Data</button>
                 </div>
-            </section>
-        </main>
-
-        <footer>
-            <div class="footer-content">
-                <p>&copy; 2024 Incident Tracker | Designed by तन्मय</p>
-                <p>Version 1.0.0</p>
-                <p>Date: 1-08-2024</p>
             </div>
+        </main>
+        <footer>
+            <p>© 2025 Incident Tracker | Designed by तन्मय</p>
         </footer>
     </div>
-
-    <script src="scripts.js"></script>
 </body>
 </html>
